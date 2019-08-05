@@ -7,6 +7,7 @@ import numpy as np
 
 from util.GoogleVectorizer import GoogleVectorizer
 from util.FNCData import FNCData
+from util.misc import get_class_weights
 from util.plot import plot_keras_history, plot_confusion_matrix
 
 
@@ -55,13 +56,17 @@ class TwoToOneLSTM(object):
         titles = pad_sequences(titles, maxlen=seq_len, dtype='float32')
         bodies = pad_sequences(bodies, maxlen=seq_len, dtype='float32')
         labels = to_categorical(labels, num_classes=num_classes)
+        class_weights = get_class_weights(labels)
+        print("Calculated class weights")
+        print(class_weights)
         return self.model.fit(
             [titles, bodies],
             labels,
             batch_size=batch_size,
             epochs=epochs,
             verbose=verbose,
-            validation_split=val_split
+            validation_split=val_split,
+            class_weight=class_weights
         )
 
     def predict(self, titles, bodies, seq_len, batch_size=32, verbose=1):
@@ -88,11 +93,15 @@ if __name__ == '__main__':
     TRAIN_VAL_SPLIT = 0.2
 
     # Vectorize Data
-    v = GoogleVectorizer(path='../util/GoogleNews-vectors-negative300.bin.gz')
-    data = FNCData(stance_f='../data/train_stances.csv',
-                   body_f='../data/train_bodies.csv',
-                   max_seq_len=SEQ_LEN, vectorizer=v,
-                   pkl_to='../data/vectorized_data.pkl')
+    # v = GoogleVectorizer(path='../util/GoogleNews-vectors-negative300.bin.gz')
+    data = FNCData(
+        # max_seq_len=SEQ_LEN,
+        # vectorizer=v,
+        # stance_f='../data/train_stances.csv',
+        # body_f='../data/train_bodies.csv',
+        # pkl_to='../data/vectorized_data.pkl'
+        pkl_from='../data/vectorized_data.pkl'
+    )
 
     # Create model
     model = TwoToOneLSTM(
@@ -117,11 +126,18 @@ if __name__ == '__main__':
     plot_keras_history(history, True)
 
     # Evaluate model
-    num_to_eval = 100
-    y_true = data.stances[0:num_to_eval]
+    test_data = FNCData(
+        # max_seq_len=500,
+        # vectorizer=v,
+        # stance_f='../data/competition_test_stances.csv',
+        # body_f='../data/competition_test_bodies.csv',
+        # pkl_to='../data/vectorized_data_test.pkl'
+        pkl_from='../data/vectorized_data_test.pkl'
+    )
+    y_true = test_data.stances
     y_pred = model.predict(
-        titles=data.headlines[0:num_to_eval],
-        bodies=data.bodies[0:num_to_eval],
+        titles=test_data.headlines,
+        bodies=test_data.bodies,
         seq_len=SEQ_LEN,
         batch_size=BATCH_SIZE
     )
