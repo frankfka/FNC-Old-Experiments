@@ -22,34 +22,38 @@ def balance_stances(df):
     agree_claims = df[df['Stance'] == AGREE_KEY]
     disagree_claims = df[df['Stance'] == DISAGREE_KEY]
     discuss_claims = df[df['Stance'] == DISCUSS_KEY]
-    unrelated_claims = df[df['Stance'] == UNRELATED_KEY]
+    # unrelated_claims = df[df['Stance'] == UNRELATED_KEY]
 
     max_index = min([
         len(agree_claims.index),
         len(disagree_claims.index),
         len(discuss_claims.index),
-        len(unrelated_claims.index),
+        # len(unrelated_claims.index),
     ])
     print(f"Max index is: {max_index}")
     return pd.concat([
         agree_claims[0: max_index],
         disagree_claims[0: max_index],
         discuss_claims[0: max_index],
-        unrelated_claims[0: max_index]
+        # unrelated_claims[0: max_index]
     ]).sample(frac=1)  # This shuffles
 
 
 # Get counts (agree, disagree, discuss, unrelated)
 def stance_counts(stance_list):
-    return (len([i for i in stance_list if i == stance2idx[AGREE_KEY]]),
-            len([i for i in stance_list if i == stance2idx[DISAGREE_KEY]]),
-            len([i for i in stance_list if i == stance2idx[DISCUSS_KEY]]),
-            len([i for i in stance_list if i == stance2idx[UNRELATED_KEY]]))
+    return (
+        len([i for i in stance_list if i == stance2idx[AGREE_KEY]]),
+        len([i for i in stance_list if i == stance2idx[DISAGREE_KEY]]),
+        len([i for i in stance_list if i == stance2idx[DISCUSS_KEY]])
+        # len([i for i in stance_list if i == stance2idx[UNRELATED_KEY]])
+    )
 
 
 # Return (headline, body, stance)
-def from_pkl(path):
+def from_pkl(path, bal_stances=False):
     df = pd.read_pickle(path)
+    if bal_stances:
+        df = balance_stances(df)
     return df[PICKLE_HEADLINE], df[PICKLE_BODY], df[PICKLE_STANCE]
 
 
@@ -66,15 +70,19 @@ def to_pkl(headlines, bodies, stances, path):
 
 
 # Reads the files and returns (headline, body, stance)
-def from_files(body_f, stance_f, max_seq_len, vectorizer, pkl_to):
+def from_files(body_f, stance_f, max_seq_len, vectorizer, pkl_to, bal_stances):
     # Body ID is unique
     bodies_df = pd.read_csv(body_f, index_col='Body ID')
     # Body ID is NOT unique (multiple stances point to same body)
-    stances_df = pd.read_csv(stance_f)[0:5000]
+    stances_df = pd.read_csv(stance_f)
+    # We don't care about unrelated claims (not relevant to new contest)
+    stances_df = stances_df[stances_df['Stance'] != UNRELATED_KEY]
+    # Laptop can't process all of these, test on a subset
+    # stances_df = stances_df[0:5000]
 
-    # Peek into the dataset (we can also balance it here)
-    print(stances_df['Stance'].value_counts())
-    # stances_df = balance_stances(stances_df)
+    # Balance the dataset if required
+    if bal_stances:
+        stances_df = balance_stances(stances_df)
 
     headlines = stances_df['Headline']
     bodies = [bodies_df.loc[bodyId, 'articleBody'] for bodyId in stances_df['Body ID']]
@@ -82,7 +90,7 @@ def from_files(body_f, stance_f, max_seq_len, vectorizer, pkl_to):
     stances = [stance2idx[stance] for stance in stances_df['Stance']]
     # Vectorize text if a vectorizer is given
     if vectorizer is not None:
-        assert(max_seq_len is not None)
+        assert (max_seq_len is not None)
         print("Vectorizing headlines")
         # Convert headlines to shape (# Sequences, SeqLen, Embedding Dim)
         headlines = vectorizer.transform_many(
@@ -107,8 +115,7 @@ class FNCData(object):
     - If no vectorizer is passed, max_seq_len is not used
     """
 
-    def __init__(self, max_seq_len=None, vectorizer=None,
-                 stance_f=None, body_f=None,
+    def __init__(self, max_seq_len=None, vectorizer=None, stance_f=None, body_f=None, bal_stances=False,
                  pkl_to=None, pkl_from=None):
         start_time = time.time()
         if stance_f and body_f:
@@ -116,13 +123,14 @@ class FNCData(object):
                                                                    body_f=body_f,
                                                                    stance_f=stance_f,
                                                                    pkl_to=pkl_to,
-                                                                   vectorizer=vectorizer)
+                                                                   vectorizer=vectorizer,
+                                                                   bal_stances=bal_stances)
         elif pkl_from:
-            self.headlines, self.bodies, self.stances = from_pkl(pkl_from)
+            self.headlines, self.bodies, self.stances = from_pkl(pkl_from, bal_stances=bal_stances)
         else:
             raise ValueError("Incorrect params")
-        self.agree_count, self.disagree_count, self.discuss_count, self.unrelated_count = stance_counts(self.stances)
-        print(stance_counts(self.stances))
+        # self.agree_count, self.disagree_count, self.discuss_count = stance_counts(self.stances)
+        print(f"Stance counts: {stance_counts(self.stances)}")
         print(f"FNC Data loaded in {time.time() - start_time}s")
 
 

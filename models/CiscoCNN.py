@@ -1,9 +1,10 @@
 from keras import Sequential, Model
-from keras.layers import MaxPooling1D, Conv1D, Dropout, Concatenate, Dense, Flatten, AveragePooling1D, \
-    BatchNormalization
+from keras.layers import MaxPooling1D, Conv1D, Dropout, Concatenate, Dense, Flatten, AveragePooling1D
 from keras.utils import to_categorical
 from keras_preprocessing.sequence import pad_sequences
+from keras.optimizers import Adam
 import numpy as np
+from sklearn.metrics import accuracy_score, f1_score
 
 from util.GoogleVectorizer import GoogleVectorizer
 from util.FNCData import FNCData
@@ -72,14 +73,18 @@ class CiscoCNN(object):
         merged_mlp = Dense(dense_num_hidden, activation='relu')(merged_mlp)
         merged_mlp = Dense(dense_num_hidden, activation='relu')(merged_mlp)
         merged_mlp = Dense(dense_num_hidden, activation='relu')(merged_mlp)
-        merged_mlp = Dense(4, activation='softmax')(merged_mlp)
+        merged_mlp = Dense(3, activation='softmax')(merged_mlp)
 
         complete_model = Model([claim_cnn.input, body_cnn.input], merged_mlp)
-        complete_model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
+
+        # Create the optimizer
+        optimizer = Adam(lr=0.0002, beta_1=0.1, beta_2=0.001, epsilon=1e-08)
+
+        complete_model.compile(optimizer=optimizer, loss='categorical_crossentropy', metrics=['accuracy'])
         complete_model.summary()
         self.model = complete_model
 
-    def train(self, titles, bodies, labels, epochs, seq_len, num_classes=4,
+    def train(self, titles, bodies, labels, epochs, seq_len, num_classes=3,
               batch_size=32, val_split=0.2, verbose=1):
         # Do sequence padding
         titles = pad_sequences(titles, maxlen=seq_len, dtype='float32')
@@ -110,7 +115,8 @@ class CiscoCNN(object):
 
 if __name__ == '__main__':
     # Define parameters
-    SEQ_LEN = 500
+    NUM_CLASSES = 3
+    SEQ_LEN = 1000
     EMB_DIM = 300
     INPUT_SHAPE = (SEQ_LEN, EMB_DIM)
     DROPOUT = 0.5
@@ -120,18 +126,19 @@ if __name__ == '__main__':
     POOL_SIZE = 2
     NUM_DENSE_HIDDEN = 1024
 
-    NUM_EPOCHS = 20
-    BATCH_SIZE = 32
+    NUM_EPOCHS = 30
+    BATCH_SIZE = 64
     TRAIN_VAL_SPLIT = 0.2
 
     # Vectorize Data
-    # v = GoogleVectorizer(path='../util/GoogleNews-vectors-negative300.bin.gz')
+    v = GoogleVectorizer(path='../util/GoogleNews-vectors-negative300.bin.gz')
     data = FNCData(
-        # stance_f='../data/train_stances.csv',
-        # body_f='../data/train_bodies.csv',
-        # max_seq_len=SEQ_LEN, vectorizer=v,
-        # pkl_to='../data/vectorized_data.pkl',
-        pkl_from='../data/vectorized_data.pkl'
+        stance_f='../data/train_stances.csv',
+        body_f='../data/train_bodies.csv',
+        max_seq_len=SEQ_LEN, vectorizer=v,
+        pkl_to='../data/vectorized_data_balanced.pkl',
+        # pkl_from='../data/vectorized_data_balanced.pkl',
+        bal_stances=True
     )
 
     # Create model
@@ -153,6 +160,7 @@ if __name__ == '__main__':
         epochs=NUM_EPOCHS,
         seq_len=SEQ_LEN,
         batch_size=BATCH_SIZE,
+        num_classes=NUM_CLASSES,
         val_split=TRAIN_VAL_SPLIT
     )
 
@@ -161,12 +169,13 @@ if __name__ == '__main__':
 
     # Evaluate model
     test_data = FNCData(
-        # max_seq_len=500,
-        # vectorizer=v,
-        # stance_f='../data/competition_test_stances.csv',
-        # body_f='../data/competition_test_bodies.csv',
-        # pkl_to='../data/vectorized_data_test.pkl'
-        pkl_from='../data/vectorized_data_test.pkl'
+        max_seq_len=500,
+        vectorizer=v,
+        stance_f='../data/competition_test_stances.csv',
+        body_f='../data/competition_test_bodies.csv',
+        pkl_to='../data/vectorized_data_test.pkl',
+        bal_stances=False,
+        # pkl_from='../data/vectorized_data_test.pkl'
     )
     y_true = test_data.stances
     y_pred = model.predict(
@@ -182,5 +191,9 @@ if __name__ == '__main__':
         y_true=y_true,
         y_pred=y_pred,
         normalize=True,
-        classes=['agree', 'disagree', 'discuss', 'unrelated']
+        classes=['agree', 'disagree', 'discuss']
     )
+    accuracy = accuracy_score(y_true=y_true, y_pred=y_pred)
+    print(accuracy)
+    f1_score = f1_score(y_true=y_true, y_pred=y_pred, average='micro')
+    print(f1_score)

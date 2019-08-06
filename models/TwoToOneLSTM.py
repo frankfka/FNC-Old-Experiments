@@ -4,6 +4,7 @@ from keras.layers import MaxPooling1D, Conv1D, Dropout, Concatenate, Dense, Flat
 from keras.utils import to_categorical
 from keras_preprocessing.sequence import pad_sequences
 import numpy as np
+from sklearn.metrics import accuracy_score, f1_score
 
 from util.GoogleVectorizer import GoogleVectorizer
 from util.FNCData import FNCData
@@ -43,14 +44,14 @@ class TwoToOneLSTM(object):
         merged_mlp = BatchNormalization()(merged_mlp)
         merged_mlp = Dense(dense_num_hidden, activation='relu')(merged_mlp)
         merged_mlp = Dense(dense_num_hidden, activation='relu')(merged_mlp)
-        merged_mlp = Dense(4, activation='softmax')(merged_mlp)
+        merged_mlp = Dense(3, activation='softmax')(merged_mlp)
 
         complete_model = Model([claim_lstm.input, body_lstm.input], merged_mlp)
         complete_model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
         complete_model.summary()
         self.model = complete_model
 
-    def train(self, titles, bodies, labels, epochs, seq_len, num_classes=4,
+    def train(self, titles, bodies, labels, epochs, seq_len, num_classes=3,
               batch_size=32, val_split=0.2, verbose=1):
         # Do sequence padding
         titles = pad_sequences(titles, maxlen=seq_len, dtype='float32')
@@ -87,6 +88,7 @@ if __name__ == '__main__':
     DROPOUT = 0.5
     NUM_LSTM_UNITS = 64
     NUM_DENSE_HIDDEN = 512
+    NUM_CLASSES = 3
 
     NUM_EPOCHS = 20
     BATCH_SIZE = 32
@@ -119,7 +121,8 @@ if __name__ == '__main__':
         epochs=NUM_EPOCHS,
         seq_len=SEQ_LEN,
         batch_size=BATCH_SIZE,
-        val_split=TRAIN_VAL_SPLIT
+        val_split=TRAIN_VAL_SPLIT,
+        num_classes=NUM_CLASSES
     )
 
     # Plot training history
@@ -148,5 +151,9 @@ if __name__ == '__main__':
         y_true=y_true,
         y_pred=y_pred,
         normalize=True,
-        classes=['agree', 'disagree', 'discuss', 'unrelated']
+        classes=['agree', 'disagree', 'discuss']
     )
+    accuracy = accuracy_score(y_true=y_true, y_pred=y_pred)
+    print(accuracy)
+    f1_score = f1_score(y_true=y_true, y_pred=y_pred, average='micro')
+    print(f1_score)

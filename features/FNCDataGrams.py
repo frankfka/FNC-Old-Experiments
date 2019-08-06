@@ -24,7 +24,7 @@ def preprocess_and_split(txt):
 def list_of_ngrams(unigrams, n):
     return [gram for gram in ngrams(unigrams, n=n)]
 
-
+# TODO: Bigrams, trigrams not actually used anywhere
 class FNCDataGrams(object):
     """
     Generates uni, bi, and trigrams for FNC data.
@@ -42,11 +42,11 @@ class FNCDataGrams(object):
             uni_bodies = [preprocess_and_split(txt) for txt in txt_bodies]
             uni_headlines = [preprocess_and_split(txt) for txt in txt_headlines]
             print("Creating bigrams")
-            bi_bodies = list_of_ngrams(uni_bodies, n=2)
-            bi_headlines = list_of_ngrams(uni_headlines, n=2)
+            bi_bodies = [list_of_ngrams(txt, n=2) for txt in uni_bodies]  # Each article -> list of (word1, word2)
+            bi_headlines = [list_of_ngrams(txt, n=2) for txt in uni_headlines]
             print("Creating trigrams")
-            tri_bodies = list_of_ngrams(uni_bodies, n=3)
-            tri_headlines = list_of_ngrams(uni_headlines, n=3)
+            tri_bodies = [list_of_ngrams(txt, n=3) for txt in uni_bodies]  # list of (word1, word2, word3)
+            tri_headlines = [list_of_ngrams(txt, n=3) for txt in uni_headlines]
             self.data = pd.DataFrame(data={
                 UNI_BODIES: uni_bodies,
                 UNI_HEADLINES: uni_headlines,
@@ -63,3 +63,16 @@ class FNCDataGrams(object):
                     print(f"Saving to pickle failed: {e}")
 
         print(f"FNC Grams Data loaded in {time.time() - start_time}s")
+
+
+if __name__ == '__main__':
+    dg = FNCDataGrams(
+        txt_headlines=['hello I am frank', 'this is a sentence', 'pickles and oranges don\'t go together'],
+        txt_bodies=['this article is about frank', 'semantic similarity is hard to calculate', 'fruity punch']
+    )
+    print(dg.data[UNI_HEADLINES])
+    print(dg.data[UNI_BODIES])
+    print(dg.data[BI_HEADLINES])
+    print(dg.data[BI_BODIES])
+    print(dg.data[TRI_HEADLINES])
+    print(dg.data[TRI_BODIES])
