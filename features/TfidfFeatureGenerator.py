@@ -5,6 +5,10 @@ import numpy as np
 from features.FeatureGenerator import FeatureGenerator
 import features.FNCDataGrams as DG
 
+# TODO: Pickle dump & load
+# TODO: How to identify each pair? when things get re-loaded, index may be lost
+from util.misc import log
+
 
 class TfidfFeatureGenerator(FeatureGenerator):
 
@@ -33,14 +37,14 @@ class TfidfFeatureGenerator(FeatureGenerator):
         headline_tfidf_list = v_head.fit_transform(
             raw_documents=data[DG.UNI_HEADLINES].map(lambda x: ' '.join(x))  # Re-concats the unigrams into documents
         )  # Creates a TFIDF matrix for headlines
-        print(f"Created TFIDF matrix for headlines with shape {headline_tfidf_list.shape}")
+        log(f"Created TFIDF matrix for headlines with shape {headline_tfidf_list.shape}")
 
         # Do the same for body
         v_body = TfidfVectorizer(ngram_range=(1, 3), max_df=max_df, min_df=min_df, vocabulary=vocab)
         body_tfidf_list = v_body.fit_transform(
             raw_documents=data[DG.UNI_BODIES].map(lambda x: ' '.join(x))
         )
-        print(f"Created TFIDF matrix for bodies with shape {body_tfidf_list.shape}")
+        log(f"Created TFIDF matrix for bodies with shape {body_tfidf_list.shape}")
 
         # Calculate cosine similarities for each headline/body pair
         cos_similarities = cosine_similarity(headline_tfidf_list, body_tfidf_list)  # n samples x n samples matrix
@@ -52,8 +56,6 @@ class TfidfFeatureGenerator(FeatureGenerator):
     def load(self, pkl_path):
         pass
 
-
-# TODO: Zip and upload!
 
 if __name__ == '__main__':
     dg = DG.FNCDataGrams(

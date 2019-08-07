@@ -2,6 +2,7 @@ import time
 import pandas as pd
 
 from util.GoogleVectorizer import GoogleVectorizer
+from util.misc import log
 
 AGREE_KEY = 'agree'
 DISAGREE_KEY = 'disagree'
@@ -30,7 +31,7 @@ def balance_stances(df):
         len(discuss_claims.index),
         # len(unrelated_claims.index),
     ])
-    print(f"Max index is: {max_index}")
+    log(f"Max index is: {max_index}")
     return pd.concat([
         agree_claims[0: max_index],
         disagree_claims[0: max_index],
@@ -66,7 +67,7 @@ def to_pkl(headlines, bodies, stances, path):
             PICKLE_STANCE: stances
         }).to_pickle(path)
     except Exception as e:
-        print(f"Saving to pickle failed: {e}")
+        log(f"Saving to pickle failed: {e}")
 
 
 # Reads the files and returns (headline, body, stance)
@@ -91,13 +92,13 @@ def from_files(body_f, stance_f, max_seq_len, vectorizer, pkl_to, bal_stances):
     # Vectorize text if a vectorizer is given
     if vectorizer is not None:
         assert (max_seq_len is not None)
-        print("Vectorizing headlines")
+        log("Vectorizing headlines")
         # Convert headlines to shape (# Sequences, SeqLen, Embedding Dim)
         headlines = vectorizer.transform_many(
             headlines,
             max_seq_len=max_seq_len
         )
-        print("Vectorizing bodies")
+        log("Vectorizing bodies")
         # Get Body from Stance 'Body ID' -> Convert bodies to shape (# Sequences, SeqLen, Embedding Dim)
         bodies = vectorizer.transform_many(
             bodies,
@@ -130,8 +131,8 @@ class FNCData(object):
         else:
             raise ValueError("Incorrect params")
         # self.agree_count, self.disagree_count, self.discuss_count = stance_counts(self.stances)
-        print(f"Stance counts: {stance_counts(self.stances)}")
-        print(f"FNC Data loaded in {time.time() - start_time}s")
+        log(f"Stance counts: {stance_counts(self.stances)}")
+        log(f"FNC Data loaded in {time.time() - start_time}s")
 
 
 if __name__ == '__main__':

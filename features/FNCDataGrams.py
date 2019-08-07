@@ -2,6 +2,7 @@ import time
 import pandas as pd
 from nltk import ngrams
 
+from util.misc import log
 from util.text_processing import tokenize_by_word, clean_tokenized, analyze_pos
 
 UNI_BODIES = 'uni_bodies'
@@ -35,16 +36,16 @@ class FNCDataGrams(object):
         start_time = time.time()
 
         if pkl_from is not None:
-            print("Loading from pickle")
+            log("Loading from pickle")
             self.data = pd.read_pickle(pkl_from)
         else:
-            print("Creating unigrams")
+            log("Creating unigrams")
             uni_bodies = [preprocess_and_split(txt) for txt in txt_bodies]
             uni_headlines = [preprocess_and_split(txt) for txt in txt_headlines]
-            print("Creating bigrams")
+            log("Creating bigrams")
             bi_bodies = [list_of_ngrams(txt, n=2) for txt in uni_bodies]  # Each article -> list of (word1, word2)
             bi_headlines = [list_of_ngrams(txt, n=2) for txt in uni_headlines]
-            print("Creating trigrams")
+            log("Creating trigrams")
             tri_bodies = [list_of_ngrams(txt, n=3) for txt in uni_bodies]  # list of (word1, word2, word3)
             tri_headlines = [list_of_ngrams(txt, n=3) for txt in uni_headlines]
             self.data = pd.DataFrame(data={
@@ -56,13 +57,13 @@ class FNCDataGrams(object):
                 TRI_HEADLINES: tri_headlines
             })
             if pkl_to is not None:
-                print("Saving grams to pickle")
+                log("Saving grams to pickle")
                 try:
                     self.data.to_pickle(pkl_to)
                 except Exception as e:
-                    print(f"Saving to pickle failed: {e}")
+                    log(f"Saving to pickle failed: {e}")
 
-        print(f"FNC Grams Data loaded in {time.time() - start_time}s")
+        log(f"FNC Grams Data loaded in {time.time() - start_time}s")
 
 
 if __name__ == '__main__':

@@ -2,6 +2,8 @@ import gensim
 import time
 from nltk import word_tokenize
 
+from util.misc import log
+
 DEFAULT_MAX_SEQ_LEN = 500
 
 
@@ -18,7 +20,7 @@ class GoogleVectorizer(object):
     def load(self):
         start_time = time.time()
         self.model = gensim.models.KeyedVectors.load_word2vec_format(self.path, unicode_errors='ignore', binary=True)
-        print(f"Google word vectors loaded in {time.time() - start_time}s")
+        log(f"Google word vectors loaded in {time.time() - start_time}s")
 
     def transform_many(self, list_of_txt, max_seq_len=DEFAULT_MAX_SEQ_LEN):
         return [

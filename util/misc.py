@@ -1,5 +1,26 @@
 from sklearn.utils import class_weight
+from datetime import datetime
 import numpy as np
+
+
+# Get a log directory for tensorboard
+def get_tb_logdir(unique_name):
+    timestamp = datetime.now().strftime("%m%d-%H%M")
+    return f"logs/{unique_name}-{timestamp}"
+
+
+# Log a message to console
+def log(msg, level="INFO", header=False):
+    if header:
+        print(
+            f"""
+            ========================================
+            {msg}
+            ========================================
+            """
+        )
+    else:
+        print(f"{level}: {msg}")
 
 
 # Computes class weights for keras with to_categorical applied to y-data

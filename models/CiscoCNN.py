@@ -1,4 +1,5 @@
 from keras import Sequential, Model
+from keras.callbacks import TensorBoard
 from keras.layers import MaxPooling1D, Conv1D, Dropout, Concatenate, Dense, Flatten, AveragePooling1D
 from keras.utils import to_categorical
 from keras_preprocessing.sequence import pad_sequences
@@ -8,7 +9,7 @@ from sklearn.metrics import accuracy_score, f1_score
 
 from util.GoogleVectorizer import GoogleVectorizer
 from util.FNCData import FNCData
-from util.misc import get_class_weights
+from util.misc import get_class_weights, log, get_tb_logdir
 from util.plot import plot_keras_history, plot_confusion_matrix
 
 
@@ -49,8 +50,8 @@ def get_input_cnn(input_shape, dropout, conv_num_hidden, conv_kernel_size, max_p
 
 class CiscoCNN(object):
 
-    def __init__(self, input_shape, dropout=0.5, conv_num_hidden=256,
-                 conv_kernel_size=3, max_pool=True, pool_size=2, dense_num_hidden=1024):
+    def __init__(self, input_shape, dropout=0.5, conv_num_hidden=256, conv_kernel_size=3, max_pool=True,
+                 pool_size=2, dense_num_hidden=1024, lr=0.001, beta_1=0.9, beta_2=0.999, epsilon=1e-8):
         claim_cnn = get_input_cnn(
             input_shape=input_shape,
             dropout=dropout,
@@ -78,21 +79,25 @@ class CiscoCNN(object):
         complete_model = Model([claim_cnn.input, body_cnn.input], merged_mlp)
 
         # Create the optimizer
-        optimizer = Adam(lr=0.0002, beta_1=0.1, beta_2=0.001, epsilon=1e-08)
+        optimizer = Adam(lr=lr, beta_1=beta_1, beta_2=beta_2, epsilon=epsilon)
 
         complete_model.compile(optimizer=optimizer, loss='categorical_crossentropy', metrics=['accuracy'])
         complete_model.summary()
         self.model = complete_model
 
     def train(self, titles, bodies, labels, epochs, seq_len, num_classes=3,
-              batch_size=32, val_split=0.2, verbose=1):
+              batch_size=32, val_split=0.2, verbose=1, logs_name=None):
         # Do sequence padding
         titles = pad_sequences(titles, maxlen=seq_len, dtype='float32')
         bodies = pad_sequences(bodies, maxlen=seq_len, dtype='float32')
         labels = to_categorical(labels, num_classes=num_classes)
         class_weights = get_class_weights(labels)
-        print("Calculated class weights")
-        print(class_weights)
+        log("Calculated class weights")
+        log(class_weights)
+        # Init tensorboard
+        callbacks = []
+        if logs_name is not None:
+            callbacks.append(TensorBoard(log_dir=get_tb_logdir(f"CiscoCNN_{logs_name}")))
         return self.model.fit(
             [titles, bodies],
             labels,
@@ -100,7 +105,8 @@ class CiscoCNN(object):
             epochs=epochs,
             verbose=verbose,
             validation_split=val_split,
-            class_weight=class_weights
+            class_weight=class_weights,
+            callbacks=callbacks
         )
 
     def predict(self, titles, bodies, seq_len, batch_size=32, verbose=1):
@@ -114,31 +120,37 @@ class CiscoCNN(object):
 
 
 if __name__ == '__main__':
-    # Define parameters
+    # Model Params
     NUM_CLASSES = 3
-    SEQ_LEN = 1000
+    SEQ_LEN = 500
     EMB_DIM = 300
     INPUT_SHAPE = (SEQ_LEN, EMB_DIM)
     DROPOUT = 0.5
     NUM_CONV_HIDDEN = 256
     KERNEL_SIZE_CONV = 3
-    USE_MAXPOOL = True
+    USE_MAXPOOL = False
     POOL_SIZE = 2
     NUM_DENSE_HIDDEN = 1024
+    # Optimizer
+    ADAM_LR = 0.0002
+    ADAM_B1 = 0.1
+    ADAM_B2 = 0.001
+    ADAM_EPSILON = 1e-08
 
+    # Training Params
     NUM_EPOCHS = 30
     BATCH_SIZE = 64
     TRAIN_VAL_SPLIT = 0.2
 
     # Vectorize Data
-    v = GoogleVectorizer(path='../util/GoogleNews-vectors-negative300.bin.gz')
+    # v = GoogleVectorizer(path='../util/GoogleNews-vectors-negative300.bin.gz')
     data = FNCData(
-        stance_f='../data/train_stances.csv',
-        body_f='../data/train_bodies.csv',
-        max_seq_len=SEQ_LEN, vectorizer=v,
-        pkl_to='../data/vectorized_data_balanced.pkl',
-        # pkl_from='../data/vectorized_data_balanced.pkl',
-        bal_stances=True
+        # stance_f='../data/train_stances.csv',
+        # body_f='../data/train_bodies.csv',
+        # max_seq_len=SEQ_LEN, vectorizer=v,
+        # pkl_to='../data/vectorized_data_balanced.pkl',
+        # bal_stances=True,
+        pkl_from='../data/vectorized_data.pkl',
     )
 
     # Create model
@@ -149,7 +161,11 @@ if __name__ == '__main__':
         conv_kernel_size=KERNEL_SIZE_CONV,
         max_pool=USE_MAXPOOL,
         pool_size=POOL_SIZE,
-        dense_num_hidden=NUM_DENSE_HIDDEN
+        dense_num_hidden=NUM_DENSE_HIDDEN,
+        lr=ADAM_LR,
+        beta_1=ADAM_B1,
+        beta_2=ADAM_B2,
+        epsilon=ADAM_EPSILON
     )
 
     # Train the model
@@ -161,7 +177,8 @@ if __name__ == '__main__':
         seq_len=SEQ_LEN,
         batch_size=BATCH_SIZE,
         num_classes=NUM_CLASSES,
-        val_split=TRAIN_VAL_SPLIT
+        val_split=TRAIN_VAL_SPLIT,
+        logs_name=f"{NUM_CONV_HIDDEN}CONV-{NUM_DENSE_HIDDEN}DENSE-{DROPOUT}DOUT-{USE_MAXPOOL}MXPL-{NUM_EPOCHS}EPOCHS"
     )
 
     # Plot training history
@@ -169,13 +186,13 @@ if __name__ == '__main__':
 
     # Evaluate model
     test_data = FNCData(
-        max_seq_len=500,
-        vectorizer=v,
-        stance_f='../data/competition_test_stances.csv',
-        body_f='../data/competition_test_bodies.csv',
-        pkl_to='../data/vectorized_data_test.pkl',
-        bal_stances=False,
-        # pkl_from='../data/vectorized_data_test.pkl'
+        # max_seq_len=500,
+        # vectorizer=v,
+        # stance_f='../data/competition_test_stances.csv',
+        # body_f='../data/competition_test_bodies.csv',
+        # pkl_to='../data/vectorized_data_test.pkl',
+        # bal_stances=False,
+        pkl_from='../data/vectorized_data_test.pkl'
     )
     y_true = test_data.stances
     y_pred = model.predict(
@@ -194,6 +211,10 @@ if __name__ == '__main__':
         classes=['agree', 'disagree', 'discuss']
     )
     accuracy = accuracy_score(y_true=y_true, y_pred=y_pred)
-    print(accuracy)
-    f1_score = f1_score(y_true=y_true, y_pred=y_pred, average='micro')
-    print(f1_score)
+    log(f"Accuracy: {accuracy}")
+    f1_score_micro = f1_score(y_true=y_true, y_pred=y_pred, average='micro')
+    log(f"F1 Score (Micro): {f1_score_micro}")
+    f1_score_macro = f1_score(y_true=y_true, y_pred=y_pred, average='macro')
+    log(f"F1 Score (Macro): {f1_score_macro}")
+    f1_score_weighted = f1_score(y_true=y_true, y_pred=y_pred, average='weighted')
+    log(f"F1 Score (Weighted): {f1_score_weighted}")

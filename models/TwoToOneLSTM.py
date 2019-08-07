@@ -1,6 +1,7 @@
 from keras import Sequential, Model
-from keras.layers import MaxPooling1D, Conv1D, Dropout, Concatenate, Dense, Flatten, AveragePooling1D, LSTM, \
-    BatchNormalization
+from keras.callbacks import TensorBoard
+from keras.layers import Concatenate, Dense, LSTM, BatchNormalization
+from keras.optimizers import Adam
 from keras.utils import to_categorical
 from keras_preprocessing.sequence import pad_sequences
 import numpy as np
@@ -8,7 +9,7 @@ from sklearn.metrics import accuracy_score, f1_score
 
 from util.GoogleVectorizer import GoogleVectorizer
 from util.FNCData import FNCData
-from util.misc import get_class_weights
+from util.misc import get_class_weights, log, get_tb_logdir
 from util.plot import plot_keras_history, plot_confusion_matrix
 
 
@@ -28,7 +29,8 @@ def get_input_lstm(input_shape, dropout, num_units):
 
 class TwoToOneLSTM(object):
 
-    def __init__(self, input_shape, dropout=0.5, lstm_num_units=32, dense_num_hidden=512):
+    def __init__(self, input_shape, dropout=0.5, lstm_num_units=32, dense_num_hidden=512, lr=0.001, beta_1=0.9,
+                 beta_2=0.999, epsilon=1e-8):
         claim_lstm = get_input_lstm(
             input_shape=input_shape,
             dropout=dropout,
@@ -47,19 +49,27 @@ class TwoToOneLSTM(object):
         merged_mlp = Dense(3, activation='softmax')(merged_mlp)
 
         complete_model = Model([claim_lstm.input, body_lstm.input], merged_mlp)
-        complete_model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
+
+        # Create the optimizer
+        optimizer = Adam(lr=lr, beta_1=beta_1, beta_2=beta_2, epsilon=epsilon)
+
+        complete_model.compile(optimizer=optimizer, loss='categorical_crossentropy', metrics=['accuracy'])
         complete_model.summary()
         self.model = complete_model
 
     def train(self, titles, bodies, labels, epochs, seq_len, num_classes=3,
-              batch_size=32, val_split=0.2, verbose=1):
+              batch_size=32, val_split=0.2, verbose=1, logs_name=None):
         # Do sequence padding
         titles = pad_sequences(titles, maxlen=seq_len, dtype='float32')
         bodies = pad_sequences(bodies, maxlen=seq_len, dtype='float32')
         labels = to_categorical(labels, num_classes=num_classes)
         class_weights = get_class_weights(labels)
-        print("Calculated class weights")
-        print(class_weights)
+        log("Calculated class weights")
+        log(class_weights)
+        # Init tensorboard
+        callbacks = []
+        if logs_name is not None:
+            callbacks.append(TensorBoard(log_dir=get_tb_logdir(f"Two2OneLSTM_{logs_name}")))
         return self.model.fit(
             [titles, bodies],
             labels,
@@ -67,7 +77,8 @@ class TwoToOneLSTM(object):
             epochs=epochs,
             verbose=verbose,
             validation_split=val_split,
-            class_weight=class_weights
+            class_weight=class_weights,
+            callbacks=callbacks
         )
 
     def predict(self, titles, bodies, seq_len, batch_size=32, verbose=1):
@@ -81,7 +92,7 @@ class TwoToOneLSTM(object):
 
 
 if __name__ == '__main__':
-    # Define parameters
+    # Model Params
     SEQ_LEN = 500
     EMB_DIM = 300
     INPUT_SHAPE = (SEQ_LEN, EMB_DIM)
@@ -89,9 +100,15 @@ if __name__ == '__main__':
     NUM_LSTM_UNITS = 64
     NUM_DENSE_HIDDEN = 512
     NUM_CLASSES = 3
+    # Optimizer
+    ADAM_LR = 0.001
+    ADAM_B1 = 0.9
+    ADAM_B2 = 0.999
+    ADAM_EPSILON = 1e-08
 
-    NUM_EPOCHS = 20
-    BATCH_SIZE = 32
+    # Training Params
+    NUM_EPOCHS = 30
+    BATCH_SIZE = 64
     TRAIN_VAL_SPLIT = 0.2
 
     # Vectorize Data
@@ -110,7 +127,11 @@ if __name__ == '__main__':
         input_shape=INPUT_SHAPE,
         dropout=DROPOUT,
         lstm_num_units=NUM_LSTM_UNITS,
-        dense_num_hidden=NUM_DENSE_HIDDEN
+        dense_num_hidden=NUM_DENSE_HIDDEN,
+        lr=ADAM_LR,
+        beta_1=ADAM_B1,
+        beta_2=ADAM_B2,
+        epsilon=ADAM_EPSILON
     )
 
     # Train the model
@@ -122,7 +143,8 @@ if __name__ == '__main__':
         seq_len=SEQ_LEN,
         batch_size=BATCH_SIZE,
         val_split=TRAIN_VAL_SPLIT,
-        num_classes=NUM_CLASSES
+        num_classes=NUM_CLASSES,
+        logs_name=f"{NUM_LSTM_UNITS}LSTM-{NUM_DENSE_HIDDEN}DENSE-{DROPOUT}DOUT-{NUM_EPOCHS}EPOCHS"
     )
 
     # Plot training history
@@ -154,6 +176,6 @@ if __name__ == '__main__':
         classes=['agree', 'disagree', 'discuss']
     )
     accuracy = accuracy_score(y_true=y_true, y_pred=y_pred)
-    print(accuracy)
+    log(accuracy)
     f1_score = f1_score(y_true=y_true, y_pred=y_pred, average='micro')
-    print(f1_score)
+    log(f1_score)

@@ -2,13 +2,16 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="61988c34-3dc5-43d3-89f3-cea70195f44a" name="Default Changelist" comment="">
-      <change afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/features/FNCDataGrams.py" beforeDir="false" afterPath="$PROJECT_DIR$/features/FNCDataGrams.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/features/SentimentFeatureGenerator.py" beforeDir="false" afterPath="$PROJECT_DIR$/features/SentimentFeatureGenerator.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/features/TfidfFeatureGenerator.py" beforeDir="false" afterPath="$PROJECT_DIR$/features/TfidfFeatureGenerator.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/models/CiscoCNN.py" beforeDir="false" afterPath="$PROJECT_DIR$/models/CiscoCNN.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/models/TwoToOneLSTM.py" beforeDir="false" afterPath="$PROJECT_DIR$/models/TwoToOneLSTM.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/util/FNCData.py" beforeDir="false" afterPath="$PROJECT_DIR$/util/FNCData.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/util/GoogleVectorizer.py" beforeDir="false" afterPath="$PROJECT_DIR$/util/GoogleVectorizer.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/util/misc.py" beforeDir="false" afterPath="$PROJECT_DIR$/util/misc.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/util/plot.py" beforeDir="false" afterPath="$PROJECT_DIR$/util/plot.py" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -73,7 +76,7 @@
       </list>
     </option>
   </component>
-  <component name="RunManager" selected="Python.TfidfFeatureGenerator">
+  <component name="RunManager" selected="Python.SentimentFeatureGenerator">
     <configuration name="CiscoCNN" type="PythonConfigurationType" factoryName="Python" temporary="true">
       <module name="fnc_old_experiments" />
       <option name="INTERPRETER_OPTIONS" value="" />
@@ -110,6 +113,28 @@
       <option name="ADD_SOURCE_ROOTS" value="true" />
       <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
       <option name="SCRIPT_NAME" value="$PROJECT_DIR$/features/FNCDataGrams.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <configuration name="SentimentFeatureGenerator" type="PythonConfigurationType" factoryName="Python" temporary="true">
+      <module name="fnc_old_experiments" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/features" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/features/SentimentFeatureGenerator.py" />
       <option name="PARAMETERS" value="" />
       <option name="SHOW_COMMAND_LINE" value="false" />
       <option name="EMULATE_TERMINAL" value="false" />
@@ -162,35 +187,13 @@
       <option name="INPUT_FILE" value="" />
       <method v="2" />
     </configuration>
-    <configuration name="main" type="PythonConfigurationType" factoryName="Python" temporary="true">
-      <module name="fnc_old_experiments" />
-      <option name="INTERPRETER_OPTIONS" value="" />
-      <option name="PARENT_ENVS" value="true" />
-      <envs>
-        <env name="PYTHONUNBUFFERED" value="1" />
-      </envs>
-      <option name="SDK_HOME" value="" />
-      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
-      <option name="IS_MODULE_SDK" value="true" />
-      <option name="ADD_CONTENT_ROOTS" value="true" />
-      <option name="ADD_SOURCE_ROOTS" value="true" />
-      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/main.py" />
-      <option name="PARAMETERS" value="" />
-      <option name="SHOW_COMMAND_LINE" value="false" />
-      <option name="EMULATE_TERMINAL" value="false" />
-      <option name="MODULE_MODE" value="false" />
-      <option name="REDIRECT_INPUT" value="false" />
-      <option name="INPUT_FILE" value="" />
-      <method v="2" />
-    </configuration>
     <recent_temporary>
       <list>
+        <item itemvalue="Python.SentimentFeatureGenerator" />
         <item itemvalue="Python.TfidfFeatureGenerator" />
         <item itemvalue="Python.FNCDataGrams" />
         <item itemvalue="Python.CiscoCNN" />
         <item itemvalue="Python.TwoToOneLSTM" />
-        <item itemvalue="Python.main" />
       </list>
     </recent_temporary>
   </component>
@@ -207,7 +210,8 @@
       <workItem from="1564840812682" duration="22614000" />
       <workItem from="1564926184670" duration="25226000" />
       <workItem from="1565042530780" duration="11997000" />
-      <workItem from="1565099337327" duration="421000" />
+      <workItem from="1565099337327" duration="453000" />
+      <workItem from="1565142257955" duration="3435000" />
     </task>
     <servers />
   </component>
@@ -232,6 +236,7 @@
     <SUITE FILE_PATH="coverage/fnc_old_experiments$FNCDataGrams.coverage" NAME="FNCDataGrams Coverage Results" MODIFIED="1565063561539" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/features" />
     <SUITE FILE_PATH="coverage/fnc_cisco_recreate$WordVector.coverage" NAME="WordVector Coverage Results" MODIFIED="1564861988852" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/fnc_old_experiments$CiscoCNN.coverage" NAME="CiscoCNN Coverage Results" MODIFIED="1565061665218" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/models" />
+    <SUITE FILE_PATH="coverage/fnc_old_experiments$SentimentFeatureGenerator.coverage" NAME="SentimentFeatureGenerator Coverage Results" MODIFIED="1565145514551" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/features" />
     <SUITE FILE_PATH="coverage/fnc_old_experiments$main.coverage" NAME="main Coverage Results" MODIFIED="1564927429729" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/fnc_cisco_recreate$preprocess.coverage" NAME="preprocess Coverage Results" MODIFIED="1564851696435" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/fnc_old_experiments$GoogleWordVector.coverage" NAME="GoogleWordVector Coverage Results" MODIFIED="1564926945353" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
