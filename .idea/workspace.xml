@@ -4,10 +4,6 @@
     <list default="true" id="61988c34-3dc5-43d3-89f3-cea70195f44a" name="Default Changelist" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/models/TwoToOneLSTM.py" beforeDir="false" afterPath="$PROJECT_DIR$/models/TwoToOneLSTM.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/models/logs/Two2OneLSTM_&lt;class 'keras.layers.wrappers.Bidirectional'&gt;BIDIR)64LSTM-512DENSE-0.5DOUT-30EPOCHS-0807-1320/events.out.tfevents.1565209209.C02W3ASXHTD6" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/models/logs/Two2OneLSTM_&lt;class 'keras.layers.wrappers.Bidirectional'&gt;BIDIR)64LSTM-512DENSE-0.5DOUT-30EPOCHS-0807-1333/events.out.tfevents.1565209999.C02W3ASXHTD6" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/util/FNCData.py" beforeDir="false" afterPath="$PROJECT_DIR$/util/FNCData.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/util/misc.py" beforeDir="false" afterPath="$PROJECT_DIR$/util/misc.py" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -209,7 +205,9 @@
       <workItem from="1565042530780" duration="11997000" />
       <workItem from="1565099337327" duration="453000" />
       <workItem from="1565142257955" duration="3531000" />
-      <workItem from="1565230312950" duration="3330000" />
+      <workItem from="1565230312950" duration="3365000" />
+      <workItem from="1565238959958" duration="30000" />
+      <workItem from="1565239249367" duration="345000" />
     </task>
     <servers />
   </component>

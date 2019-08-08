@@ -1,3 +1,4 @@
+import pandas as pd
 from keras import Sequential, Model
 from keras.callbacks import TensorBoard
 from keras.layers import Concatenate, Dense, LSTM, BatchNormalization, Bidirectional
@@ -138,6 +139,12 @@ if __name__ == '__main__':
     #     # pkl_to='../data/vectorized_data_test.pkl'
     #     pkl_from='../data/vectorized_data_test.pkl'
     # )
+    incorrect_pred = []  # Stores incorrect predictions for later analysis
+    # Labels for PD dataframe
+    HEADLINE = 'headline'
+    BODY = 'body'
+    TRUE_LABEL = 'true_stance'
+    PRED_LABEL = 'pred_stance'
 
     # Create model
     model = TwoToOneLSTM(
@@ -222,5 +229,20 @@ if __name__ == '__main__':
             y_val_pred = [np.argmax(i) for i in y_val_pred]
             eval_predictions(y_true=y_val_true, y_pred=y_val_pred, print_results=True)
 
+            # Add to incorrect predictions
+            for i, (pred, true) in enumerate(zip(y_val_pred, y_val_true)):
+                if pred == true:
+                    continue
+                incorrect_pred.append({
+                    HEADLINE: val_headlines[i],
+                    BODY: val_bodies[i],
+                    PRED_LABEL: pred,
+                    TRUE_LABEL: true
+                })
+
 
     train_with_k_fold(k=5)
+
+    # Create DF of incorrect predictions
+    incorrect_pred_df = pd.DataFrame(incorrect_pred)
+    incorrect_pred_df.to_csv("TwoToOneLSTM_Incorrect.csv")
