@@ -94,19 +94,18 @@ def from_files(body_f, stance_f, max_seq_len, vectorizer, pkl_to, bal_stances):
         assert (max_seq_len is not None)
         log("Vectorizing headlines")
         # Convert headlines to shape (# Sequences, SeqLen, Embedding Dim)
-        headlines = vectorizer.transform_many(
-            headlines,
-            max_seq_len=max_seq_len
-        )
+        headlines = vectorize_texts(vectorizer, headlines, max_seq_len)
         log("Vectorizing bodies")
         # Get Body from Stance 'Body ID' -> Convert bodies to shape (# Sequences, SeqLen, Embedding Dim)
-        bodies = vectorizer.transform_many(
-            bodies,
-            max_seq_len=max_seq_len
-        )
+        bodies = vectorize_texts(vectorizer, bodies, max_seq_len)
     if pkl_to:
         to_pkl(headlines=headlines, bodies=bodies, stances=stances, path=pkl_to)
     return headlines, bodies, stances
+
+
+# Vectorize a list of texts with given vectorizer v, trimmed to max_seq_len
+def vectorize_texts(v, list_of_txt, max_seq_len):
+    return v.transform_many(list_of_txt, max_seq_len=max_seq_len)
 
 
 class FNCData(object):
@@ -133,6 +132,12 @@ class FNCData(object):
         # self.agree_count, self.disagree_count, self.discuss_count = stance_counts(self.stances)
         log(f"Stance counts: {stance_counts(self.stances)}")
         log(f"FNC Data loaded in {time.time() - start_time}s")
+
+    # Given that this was constructed with pure text properties (i.e. no vectorizer passed). This transforms data to
+    # Vector form
+    def transform(self, vectorizer, max_seq_len):
+        self.headlines = vectorize_texts(vectorizer, self.headlines, max_seq_len)
+        self.bodies = vectorize_texts(vectorizer, self.bodies, max_seq_len)
 
 
 if __name__ == '__main__':

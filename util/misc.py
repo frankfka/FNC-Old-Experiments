@@ -1,14 +1,17 @@
 from sklearn.metrics import accuracy_score, f1_score, recall_score, precision_score
 from sklearn.utils import class_weight
 from datetime import datetime
+
+from util import FNCData
 from util.plot import plot_confusion_matrix
+from sklearn.model_selection import train_test_split, StratifiedKFold
 import numpy as np
 
 
 # Get a log directory for tensorboard
 def get_tb_logdir(unique_name):
     timestamp = datetime.now().strftime("%m%d-%H%M")
-    return f"logs/{unique_name}-{timestamp}"
+    return f"../logs/{unique_name}-{timestamp}"
 
 
 # Log a message to console
@@ -61,3 +64,12 @@ def eval_predictions(y_true, y_pred, print_results=False):
         log(f"F1 Score (Macro): {f1_score_macro}")
         log(f"F1 Score (Micro): {f1_score_micro}")
         log(f"F1 Score (Weighted): {f1_score_weighted}")
+
+
+# K-Fold Validation - returns [train_idx], [test_idx]
+# Each train/test_idx is a list of indicies from the FNCData object
+# Ex. train_data = fnc_data.headlines[train_idx]
+def k_fold_indicies(fnc_data, k=10):
+    assert(isinstance(fnc_data, FNCData.FNCData))
+    skf = StratifiedKFold(n_splits=k, shuffle=True)
+    return skf.split(fnc_data.headlines, fnc_data.stances)

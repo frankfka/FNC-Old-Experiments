@@ -8,7 +8,7 @@ import numpy as np
 
 from util.GoogleVectorizer import GoogleVectorizer
 from util.FNCData import FNCData
-from util.misc import get_class_weights, get_tb_logdir, eval_predictions, log
+from util.misc import get_class_weights, get_tb_logdir, eval_predictions, log, k_fold_indicies
 from util.plot import plot_keras_history, plot_confusion_matrix
 
 
@@ -130,6 +130,14 @@ if __name__ == '__main__':
         # pkl_to='../data/vectorized_data.pkl'
         pkl_from='../data/vectorized_data.pkl'
     )
+    # test_data = FNCData(
+    #     # max_seq_len=500,
+    #     # vectorizer=v,
+    #     # stance_f='../data/competition_test_stances.csv',
+    #     # body_f='../data/competition_test_bodies.csv',
+    #     # pkl_to='../data/vectorized_data_test.pkl'
+    #     pkl_from='../data/vectorized_data_test.pkl'
+    # )
 
     # Create model
     model = TwoToOneLSTM(
@@ -144,38 +152,75 @@ if __name__ == '__main__':
         epsilon=ADAM_EPSILON
     )
 
-    # Train the model
-    history = model.train(
-        titles=data.headlines,
-        bodies=data.bodies,
-        labels=data.stances,
-        epochs=NUM_EPOCHS,
-        seq_len=SEQ_LEN,
-        batch_size=BATCH_SIZE,
-        val_split=TRAIN_VAL_SPLIT,
-        num_classes=NUM_CLASSES,
-        logs_name=f"{Bidirectional}BIDIR){NUM_LSTM_UNITS}LSTM-{NUM_DENSE_HIDDEN}DENSE-{DROPOUT}DOUT-{NUM_EPOCHS}EPOCHS"
-    )
 
-    # Plot training history
-    plot_keras_history(history, True)
+    def train_with_val_split(test_data):
+        # Train the model
+        history = model.train(
+            titles=data.headlines,
+            bodies=data.bodies,
+            labels=data.stances,
+            epochs=NUM_EPOCHS,
+            seq_len=SEQ_LEN,
+            batch_size=BATCH_SIZE,
+            val_split=TRAIN_VAL_SPLIT,
+            num_classes=NUM_CLASSES,
+            logs_name=f"{Bidirectional}BIDIR){NUM_LSTM_UNITS}LSTM-{NUM_DENSE_HIDDEN}DENSE-{DROPOUT}DOUT-{NUM_EPOCHS}EPOCHS"
+        )
 
-    # Evaluate model
-    test_data = FNCData(
-        # max_seq_len=500,
-        # vectorizer=v,
-        # stance_f='../data/competition_test_stances.csv',
-        # body_f='../data/competition_test_bodies.csv',
-        # pkl_to='../data/vectorized_data_test.pkl'
-        pkl_from='../data/vectorized_data_test.pkl'
-    )
-    y_true = test_data.stances
-    y_pred = model.predict(
-        titles=test_data.headlines,
-        bodies=test_data.bodies,
-        seq_len=SEQ_LEN,
-        batch_size=BATCH_SIZE
-    )
-    y_pred = [np.argmax(i) for i in y_pred]
+        # Plot training history
+        plot_keras_history(history, True)
 
-    eval_predictions(y_true=y_true, y_pred=y_pred, print_results=True)
+        # Evaluate model
+        y_true = test_data.stances
+        y_pred = model.predict(
+            titles=test_data.headlines,
+            bodies=test_data.bodies,
+            seq_len=SEQ_LEN,
+            batch_size=BATCH_SIZE
+        )
+        y_pred = [np.argmax(i) for i in y_pred]
+
+        eval_predictions(y_true=y_true, y_pred=y_pred, print_results=True)
+
+
+    def train_with_k_fold(k=10):
+        folds = k_fold_indicies(data, k=k)
+        for j, (train_idx, val_idx) in enumerate(folds):
+            log(f"Fold {j}", header=True)
+
+            train_headlines = data.headlines[train_idx]
+            train_bodies = data.bodies[train_idx]
+            train_stances = data.stances[train_idx]
+            val_headlines = data.headlines[val_idx]
+            val_bodies = data.bodies[val_idx]
+            val_stances = data.stances[val_idx]
+
+            # Train the model
+            history = model.train(
+                titles=train_headlines,
+                bodies=train_bodies,
+                labels=train_stances,
+                epochs=NUM_EPOCHS,
+                seq_len=SEQ_LEN,
+                batch_size=BATCH_SIZE,
+                val_split=TRAIN_VAL_SPLIT,
+                num_classes=NUM_CLASSES,
+                logs_name=f"{Bidirectional}BIDIR){NUM_LSTM_UNITS}LSTM" +
+                          f"-{NUM_DENSE_HIDDEN}DENSE-{DROPOUT}DOUT-{NUM_EPOCHS}EPOCHS-FOLD{j}"
+            )
+
+            # Plot training history
+            plot_keras_history(history, True)
+
+            y_val_true = val_stances
+            y_val_pred = model.predict(
+                titles=val_headlines,
+                bodies=val_bodies,
+                seq_len=SEQ_LEN,
+                batch_size=BATCH_SIZE
+            )
+            y_val_pred = [np.argmax(i) for i in y_val_pred]
+            eval_predictions(y_true=y_val_true, y_pred=y_val_pred, print_results=True)
+
+
+    train_with_k_fold(k=5)
