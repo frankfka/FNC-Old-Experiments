@@ -1,8 +1,7 @@
 import matplotlib.pyplot as plt
 from sklearn.metrics import confusion_matrix
 import numpy as np
-
-from util.misc import log
+import util.misc as u
 
 
 def plot_keras_history(training_history, with_validation):
@@ -47,11 +46,11 @@ def plot_confusion_matrix(y_true, y_pred, classes,
     # Only use the labels that appear in the data
     if normalize:
         cm = cm.astype('float') / cm.sum(axis=1)[:, np.newaxis]
-        log("Normalized confusion matrix")
+        u.log("Normalized confusion matrix")
     else:
-        log('Confusion matrix, without normalization')
+        u.log('Confusion matrix, without normalization')
 
-    log(cm)
+    u.log(cm)
 
     fig, ax = plt.subplots()
     im = ax.imshow(cm, interpolation='nearest', cmap=cmap)

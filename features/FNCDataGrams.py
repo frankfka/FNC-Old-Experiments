@@ -25,6 +25,7 @@ def preprocess_and_split(txt):
 def list_of_ngrams(unigrams, n):
     return [gram for gram in ngrams(unigrams, n=n)]
 
+
 # TODO: Bigrams, trigrams not actually used anywhere
 class FNCDataGrams(object):
     """

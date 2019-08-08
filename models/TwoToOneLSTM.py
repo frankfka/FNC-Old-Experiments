@@ -1,45 +1,53 @@
 from keras import Sequential, Model
 from keras.callbacks import TensorBoard
-from keras.layers import Concatenate, Dense, LSTM, BatchNormalization
+from keras.layers import Concatenate, Dense, LSTM, BatchNormalization, Bidirectional
 from keras.optimizers import Adam
 from keras.utils import to_categorical
 from keras_preprocessing.sequence import pad_sequences
 import numpy as np
-from sklearn.metrics import accuracy_score, f1_score
 
 from util.GoogleVectorizer import GoogleVectorizer
 from util.FNCData import FNCData
-from util.misc import get_class_weights, log, get_tb_logdir
+from util.misc import get_class_weights, get_tb_logdir, eval_predictions, log
 from util.plot import plot_keras_history, plot_confusion_matrix
 
 
-def get_input_lstm(input_shape, dropout, num_units):
-    lstm = Sequential()
-    lstm.add(
-        LSTM(
+def get_input_lstm(input_shape, dropout, num_units, bi_directional):
+    input_lstm = Sequential()
+
+    # The sequence processing LSTM layer
+    if bi_directional:
+        lstm = Bidirectional(
+            LSTM(units=num_units, dropout=dropout, recurrent_dropout=dropout),
+            input_shape=input_shape
+        )  # TODO: Play with merge methods
+    else:
+        lstm = LSTM(
             units=num_units,
             input_shape=input_shape,
             dropout=dropout,
             recurrent_dropout=dropout
         )
-    )
+    input_lstm.add(lstm)
 
-    return lstm
+    return input_lstm
 
 
 class TwoToOneLSTM(object):
 
-    def __init__(self, input_shape, dropout=0.5, lstm_num_units=32, dense_num_hidden=512, lr=0.001, beta_1=0.9,
-                 beta_2=0.999, epsilon=1e-8):
+    def __init__(self, input_shape, dropout=0.5, lstm_num_units=32, lstm_bidirectional=False, dense_num_hidden=512,
+                 lr=0.001, beta_1=0.9, beta_2=0.999, epsilon=1e-8):
         claim_lstm = get_input_lstm(
             input_shape=input_shape,
             dropout=dropout,
-            num_units=lstm_num_units
+            num_units=lstm_num_units,
+            bi_directional=lstm_bidirectional
         )
         body_lstm = get_input_lstm(
             input_shape=input_shape,
             dropout=dropout,
-            num_units=lstm_num_units
+            num_units=lstm_num_units,
+            bi_directional=lstm_bidirectional
         )
 
         merged_mlp = Concatenate()([claim_lstm.output, body_lstm.output])
@@ -98,6 +106,7 @@ if __name__ == '__main__':
     INPUT_SHAPE = (SEQ_LEN, EMB_DIM)
     DROPOUT = 0.5
     NUM_LSTM_UNITS = 64
+    LSTM_BIDIRECTIONAL = True
     NUM_DENSE_HIDDEN = 512
     NUM_CLASSES = 3
     # Optimizer
@@ -127,6 +136,7 @@ if __name__ == '__main__':
         input_shape=INPUT_SHAPE,
         dropout=DROPOUT,
         lstm_num_units=NUM_LSTM_UNITS,
+        lstm_bidirectional=LSTM_BIDIRECTIONAL,
         dense_num_hidden=NUM_DENSE_HIDDEN,
         lr=ADAM_LR,
         beta_1=ADAM_B1,
@@ -144,7 +154,7 @@ if __name__ == '__main__':
         batch_size=BATCH_SIZE,
         val_split=TRAIN_VAL_SPLIT,
         num_classes=NUM_CLASSES,
-        logs_name=f"{NUM_LSTM_UNITS}LSTM-{NUM_DENSE_HIDDEN}DENSE-{DROPOUT}DOUT-{NUM_EPOCHS}EPOCHS"
+        logs_name=f"{Bidirectional}BIDIR){NUM_LSTM_UNITS}LSTM-{NUM_DENSE_HIDDEN}DENSE-{DROPOUT}DOUT-{NUM_EPOCHS}EPOCHS"
     )
 
     # Plot training history
@@ -168,14 +178,4 @@ if __name__ == '__main__':
     )
     y_pred = [np.argmax(i) for i in y_pred]
 
-    # Plot confusion matrix
-    plot_confusion_matrix(
-        y_true=y_true,
-        y_pred=y_pred,
-        normalize=True,
-        classes=['agree', 'disagree', 'discuss']
-    )
-    accuracy = accuracy_score(y_true=y_true, y_pred=y_pred)
-    log(accuracy)
-    f1_score = f1_score(y_true=y_true, y_pred=y_pred, average='micro')
-    log(f1_score)
+    eval_predictions(y_true=y_true, y_pred=y_pred, print_results=True)

@@ -9,7 +9,7 @@ from sklearn.metrics import accuracy_score, f1_score
 
 from util.GoogleVectorizer import GoogleVectorizer
 from util.FNCData import FNCData
-from util.misc import get_class_weights, log, get_tb_logdir
+from util.misc import get_class_weights, log, get_tb_logdir, eval_predictions
 from util.plot import plot_keras_history, plot_confusion_matrix
 
 
@@ -203,18 +203,4 @@ if __name__ == '__main__':
     )
     y_pred = [np.argmax(i) for i in y_pred]
 
-    # Plot confusion matrix
-    plot_confusion_matrix(
-        y_true=y_true,
-        y_pred=y_pred,
-        normalize=True,
-        classes=['agree', 'disagree', 'discuss']
-    )
-    accuracy = accuracy_score(y_true=y_true, y_pred=y_pred)
-    log(f"Accuracy: {accuracy}")
-    f1_score_micro = f1_score(y_true=y_true, y_pred=y_pred, average='micro')
-    log(f"F1 Score (Micro): {f1_score_micro}")
-    f1_score_macro = f1_score(y_true=y_true, y_pred=y_pred, average='macro')
-    log(f"F1 Score (Macro): {f1_score_macro}")
-    f1_score_weighted = f1_score(y_true=y_true, y_pred=y_pred, average='weighted')
-    log(f"F1 Score (Weighted): {f1_score_weighted}")
+    eval_predictions(y_true=y_true, y_pred=y_pred, print_results=True)
