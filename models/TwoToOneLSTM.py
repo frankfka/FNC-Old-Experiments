@@ -9,7 +9,8 @@ import numpy as np
 
 from util.GoogleVectorizer import GoogleVectorizer
 from util.FNCData import FNCData
-from util.misc import get_class_weights, get_tb_logdir, eval_predictions, log, k_fold_indicies
+from util.eval import k_fold_indicies, eval_predictions
+from util.misc import get_class_weights, get_tb_logdir, log
 from util.plot import plot_keras_history, plot_confusion_matrix
 
 
@@ -108,7 +109,7 @@ if __name__ == '__main__':
     DROPOUT = 0.5
     NUM_LSTM_UNITS = 64
     LSTM_BIDIRECTIONAL = True
-    NUM_DENSE_HIDDEN = 512
+    NUM_DENSE_HIDDEN = 64
     NUM_CLASSES = 3
     # Optimizer
     ADAM_LR = 0.001
@@ -117,7 +118,7 @@ if __name__ == '__main__':
     ADAM_EPSILON = 1e-08
 
     # Training Params
-    NUM_EPOCHS = 30
+    NUM_EPOCHS = 20
     BATCH_SIZE = 64
     TRAIN_VAL_SPLIT = 0.2
 
@@ -195,6 +196,8 @@ if __name__ == '__main__':
         for j, (train_idx, val_idx) in enumerate(folds):
             log(f"Fold {j}", header=True)
 
+            # TODO: Need to create a new model? or else it just continues training
+
             train_headlines = data.headlines[train_idx]
             train_bodies = data.bodies[train_idx]
             train_stances = data.stances[train_idx]
@@ -210,7 +213,7 @@ if __name__ == '__main__':
                 epochs=NUM_EPOCHS,
                 seq_len=SEQ_LEN,
                 batch_size=BATCH_SIZE,
-                val_split=TRAIN_VAL_SPLIT,
+                val_split=TRAIN_VAL_SPLIT, # Don't use the y_val data - but instead use a % of training data to validate
                 num_classes=NUM_CLASSES,
                 logs_name=f"{Bidirectional}BIDIR){NUM_LSTM_UNITS}LSTM" +
                           f"-{NUM_DENSE_HIDDEN}DENSE-{DROPOUT}DOUT-{NUM_EPOCHS}EPOCHS-FOLD{j}"
@@ -229,20 +232,22 @@ if __name__ == '__main__':
             y_val_pred = [np.argmax(i) for i in y_val_pred]
             eval_predictions(y_true=y_val_true, y_pred=y_val_pred, print_results=True)
 
+            # TODO: This currently does not work. The headline and body are vectors, so we don't get meaningful info
             # Add to incorrect predictions
-            for i, (pred, true) in enumerate(zip(y_val_pred, y_val_true)):
-                if pred == true:
-                    continue
-                incorrect_pred.append({
-                    HEADLINE: val_headlines[i],
-                    BODY: val_bodies[i],
-                    PRED_LABEL: pred,
-                    TRUE_LABEL: true
-                })
+            # for i, (pred, true) in enumerate(zip(y_val_pred, y_val_true)):
+            #     if pred == true:
+            #         continue
+            #     # val_headlines, bodies are slices with the original indicies - reset them and drop the original
+            #     incorrect_pred.append({
+            #         HEADLINE: val_headlines.reset_index(drop=True)[i],
+            #         BODY: val_bodies.reset_index(drop=True)[i],
+            #         PRED_LABEL: pred,
+            #         TRUE_LABEL: true
+            #     })
 
 
     train_with_k_fold(k=5)
 
     # Create DF of incorrect predictions
-    incorrect_pred_df = pd.DataFrame(incorrect_pred)
-    incorrect_pred_df.to_csv("TwoToOneLSTM_Incorrect.csv")
+    # incorrect_pred_df = pd.DataFrame(incorrect_pred)
+    # incorrect_pred_df.to_csv("TwoToOneLSTM_Incorrect.csv")

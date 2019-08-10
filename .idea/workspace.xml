@@ -3,7 +3,6 @@
   <component name="ChangeListManager">
     <list default="true" id="61988c34-3dc5-43d3-89f3-cea70195f44a" name="Default Changelist" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/models/TwoToOneLSTM.py" beforeDir="false" afterPath="$PROJECT_DIR$/models/TwoToOneLSTM.py" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -207,7 +206,8 @@
       <workItem from="1565142257955" duration="3531000" />
       <workItem from="1565230312950" duration="3365000" />
       <workItem from="1565238959958" duration="30000" />
-      <workItem from="1565239249367" duration="345000" />
+      <workItem from="1565239249367" duration="572000" />
+      <workItem from="1565412693352" duration="1029000" />
     </task>
     <servers />
   </component>

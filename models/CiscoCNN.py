@@ -9,7 +9,8 @@ from sklearn.metrics import accuracy_score, f1_score
 
 from util.GoogleVectorizer import GoogleVectorizer
 from util.FNCData import FNCData
-from util.misc import get_class_weights, log, get_tb_logdir, eval_predictions
+from util.eval import eval_predictions
+from util.misc import get_class_weights, log, get_tb_logdir
 from util.plot import plot_keras_history, plot_confusion_matrix
 
 
